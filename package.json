@@ -1,0 +1,22 @@
+{
+  "name": "pyramids",
+  "version": "0.1.0",
+  "description": "Various kinds of (image) pyramids for ndarrays of arbitrary dimension.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "to do"
+  },
+  "author": "Jasper van de Gronde <th.v.d.gronde@hccnet.nl>",
+  "license": "MIT",
+  "dependencies": {
+    "array.from": "^0.2.0",
+    "cwise": "^1.0.5",
+    "ndarray": "^1.0.16",
+    "ndarray-ops": "^1.2.2",
+    "ndarray-scratch": "^1.1.1"
+  }
+}
