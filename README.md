@@ -28,7 +28,7 @@ Note that although typically an expand operator is also given, allowing one to c
 
 ### `require("pyramids")(array, scheme[, maxlevel])`
 
-Returns a list containing `array`, followed by `maxlevel` (higher) levels of a pyramid based on the reduce operator of `scheme` (each an ndarray with the same type of data storage as `array`).
+Returns a list containing `array`, followed by `maxlevel` (higher) levels of a pyramid based on the reduce operator of `scheme` (each an ndarray with the same type of data storage as `array`). If `maxlevel` is unspecified, it returns as many levels are necessary to end up with an array containing just one element.
 
 There is no restriction on the dimensionality of `array`, but a typed array must be used for storing the data in `array` (otherwise the pool allocator used internally will fail).
 
