@@ -1,6 +1,6 @@
 {
   "name": "pyramids",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Various kinds of (image) pyramids for ndarrays of arbitrary dimension.",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "to do"
+    "url": "https://github.com/scijs/pyramids.git"
   },
   "author": "Jasper van de Gronde <th.v.d.gronde@hccnet.nl>",
   "license": "MIT",
