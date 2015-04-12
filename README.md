@@ -9,16 +9,20 @@ var ndarray = require("ndarray")
 var p = pyramid(ndarray(new Int32Array([11,10,6,12,3,2,15,9,4,5,14,7,13,8,1]), [3,5]), pyramid.adjunction)
 ```
 
-The above computes a pyramid using erosion (local minima, in this case within each 2-by-2 block), of the following "image":
+The above computes a pyramid using erosion (local minima, in this case within each 2-by-2 block), of the following "image" (array):
 
-11 | 10 |  6 | 12 | 3 
- 2 | 15 |  9 |  4 | 5 
-14 |  7 | 13 |  8 | 1
+<table>
+<tr><td align="right">11</td><td align="right">10</td><td align="right">6</td><td align="right">12</td><td align="right">3</td></tr>
+<tr><td align="right">2</td><td align="right">15</td><td align="right">9</td><td align="right">4</td><td align="right">5</td></tr>
+<tr><td align="right">14</td><td align="right">7</td><td align="right">13</td><td align="right">8</td><td align="right">1</td></tr>
+</table>
 
 The result is a list of ndarrays, with the first array (corresponding to level 0) being the original ndarray object. The array at level 1 is given by:
 
-2 | 4 | 3 
-7 | 8 | 1
+<table>
+<tr><td align="right">2</td><td align="right">4</td><td align="right">3</td></tr>
+<tr><td align="right">7</td><td align="right">8</td><td align="right">1</td></tr>
+</table>
 
 Note that although typically an expand operator is also given, allowing one to construct a detail pyramid (containing just the difference between each level and the reconstruction from the next higher level) and reconstructing an image from such a pyramid, this has not yet been implemented in this module.
 
