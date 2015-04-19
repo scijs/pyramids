@@ -1,8 +1,10 @@
 "use strict"
+var assert = require("assert")
 var ndarray = require("ndarray")
 var ops = require("ndarray-ops")
 var pool = require("ndarray-scratch")
 var cwise = require("cwise")
+var equals = require('array-equal')
 require('array.from')
 
 // TODO: Linear pyramids (e.g. Gaussian and/or spline)
@@ -10,8 +12,10 @@ require('array.from')
 // TODO: Be more careful about boundary conditions.
 
 module.exports = computePyramid
-module.exports.adjunction = {reduce: adjunctionReduce}
-module.exports.SunMaragos = {reduce: SunMaragosReduce}
+module.exports.detail = computeDetailPyramid
+module.exports.reconstruct = reconstruct
+module.exports.adjunction = {reduce: adjunctionReduce, expand: dilationExpand}
+module.exports.SunMaragos = {reduce: SunMaragosReduce, expand: dilationExpand}
 
 function computePyramid(img, scheme, maxlevel) {
   var imgShape = Array.from(img.shape)
@@ -21,14 +25,55 @@ function computePyramid(img, scheme, maxlevel) {
   var imgs = [img], tempIn, tempOut
   for(var level=1; level<=maxlevel && Math.max.apply(null, img.shape)>1; level++) {
     tempIn = poolClone(img)
-    tempOut = scheme.reduce(tempIn)
+    tempOut = scheme.reduce(tempIn) // Reduce can be considered to return a view of tempIn (or a different array allocated from the pool).
     img = ndarrayClone(tempOut)
     imgs.push(img)
     imgShape = Array.from(img.shape)
-    pool.free(tempIn)
+    pool.free(tempOut) // We want to free tempOut, since reduce may have returned a different array from the pool and freed tempIn itself.
   }
   
   return imgs
+}
+
+function computeDetailPyramid(img, scheme, maxlevel) {
+  var imgShape = Array.from(img.shape)
+  var img = ndarrayClone(img) // Copy argument since we are going to overwrite it.
+
+  if (maxlevel === undefined) maxlevel = Infinity
+  
+  var imgs = [], tempIn, tempOut, tempEx, newimg
+  for(var level=1; level<=maxlevel && Math.max.apply(null, img.shape)>1; level++) {
+    // Reduce
+    tempIn = poolClone(img)
+    tempOut = scheme.reduce(tempIn)
+    newimg = ndarrayClone(tempOut)
+    pool.free(tempOut)
+    
+    // Compute detail
+    tempEx = pool.malloc(img.shape, img.dtype)
+    scheme.expand(tempEx, newimg)
+    ops.subeq(img, tempEx)
+    pool.free(tempEx)
+
+    // Store results and reset img(Shape)
+    imgs.push(img)
+    img = newimg
+    newimg = undefined
+    imgShape = Array.from(img.shape)
+  }
+  
+  imgs.push(img) // Push the last level (not a detail level)
+  
+  return imgs
+}
+
+function reconstruct(detailPyramid, scheme) {
+  var temp
+  for(var level=detailPyramid.length-1; level-->0;) {
+    temp = poolClone(detailPyramid[level])
+    scheme.expand(temp, detailPyramid[level+1])
+    ops.addeq(detailPyramid[level], temp)
+  }
 }
 
 ////////////////////////////////////////
@@ -87,6 +132,28 @@ function SunMaragosReduce(img) {
   return e
 }
 
+function dilationExpand(target, source) {
+  var dims = source.shape.length
+  var steps = [], los = []
+  for(var d=0; d<dims; d++) {
+    steps.push(2)
+    los.push(0)
+  }
+  var e = target.step.apply(target, steps), o
+  assert(equals(e.shape, source.shape))
+  ops.assign(e, source)
+  for(var d=0; d<dims; d++) {
+    los[d] = 1
+    o = target.lo.apply(target, los)
+    o = o.step.apply(o, steps)
+    dilateUpsample(e.hi.apply(e, o.shape), o)
+    steps[d] = 1
+    los[d] = 0
+    e = target.step.apply(target, steps)
+  }
+  return target
+}
+
 ////////////////////////////////////////
 // Helpers
 
@@ -108,6 +175,13 @@ var erode = cwise({
   args: ["array", "array", "array"],
   body: function(out, in1, in2) {
     out = Math.min(in1, in2)
+  }
+})
+
+var dilateUpsample = cwise({
+  args: ["array", "array"],
+  body: function(e, o) {
+    o = e // This "dilation" uses a SE of length, with the assumption that odd values are (initially) zero.
   }
 })
 
