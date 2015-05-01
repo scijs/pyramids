@@ -1,6 +1,6 @@
 {
   "name": "pyramids",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Various kinds of (image) pyramids for ndarrays of arbitrary dimension.",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,9 @@
     "cwise": "^1.0.5",
     "ndarray": "^1.0.16",
     "ndarray-ops": "^1.2.2",
-    "ndarray-scratch": "^1.1.1"
+    "ndarray-scratch": "^1.1.1",
+    "ndarray-convolve": "^1.0.1",
+    "multinomial": "^1.0.0"
   },
   "devDependencies": {
     "tape": "^4.0.0"

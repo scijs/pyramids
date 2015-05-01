@@ -3,19 +3,24 @@ var assert = require("assert")
 var ndarray = require("ndarray")
 var ops = require("ndarray-ops")
 var pool = require("ndarray-scratch")
+var convolve = require("ndarray-convolve")
 var cwise = require("cwise")
+var binomials = require("multinomial").binomials
 var equals = require('array-equal')
 require('array.from')
 
-// TODO: Linear pyramids (e.g. Gaussian and/or spline)
-// TODO: Implement detail pyramids (and reconstructions from such pyramids).
+// TODO: Spline pyramids
 // TODO: Be more careful about boundary conditions.
+
+// NOTE: reduce functions get an image from the pool as input and return a view on the same image, or free the given argument and return a view on another image from the pool.
+//       expand functions get source and target images, and should not make any additional assumptions on their arguments (for now at least).
 
 module.exports = computePyramid
 module.exports.detail = computeDetailPyramid
 module.exports.reconstruct = reconstruct
 module.exports.adjunction = {reduce: adjunctionReduce, expand: dilationExpand}
 module.exports.SunMaragos = {reduce: SunMaragosReduce, expand: dilationExpand}
+module.exports.binomial = {reduce: function(img){return binomialReduce(img, 3)}, expand: function(target, source){return binomialExpand(target, source, 3)}}
 
 function computePyramid(img, scheme, maxlevel) {
   var imgShape = Array.from(img.shape)
@@ -35,9 +40,9 @@ function computePyramid(img, scheme, maxlevel) {
   return imgs
 }
 
-function computeDetailPyramid(img, scheme, maxlevel) {
-  var imgShape = Array.from(img.shape)
-  var img = ndarrayClone(img) // Copy argument since we are going to overwrite it.
+function computeDetailPyramid(img_arg, scheme, maxlevel) {
+  var imgShape = Array.from(img_arg.shape)
+  var img = ndarrayClone(img_arg) // Copy argument since we are going to overwrite it.
 
   if (maxlevel === undefined) maxlevel = Infinity
   
@@ -155,7 +160,58 @@ function dilationExpand(target, source) {
 }
 
 ////////////////////////////////////////
+// Linear pyramids
+
+function binomialReduce(img, n) {
+  var dims = img.shape.length
+  var kernel1 = binomials(n+1).map(function(v){return v*Math.pow(2,-n-1)})
+  console.log(kernel1)
+  var kernelShape = new Array(dims)
+  for(var i=0; i<dims; i++) {
+    kernelShape[i] = kernel1.length
+  }
+  var kernel = pool.malloc(kernelShape, "float32")
+  constructBinomialKernel(kernel, kernel1)
+  // TODO: The kernel seems to be alright, but the convolution below returns the "wrong" part (it does not assume the kernel is centered)
+  convolve(img, kernel) // TODO: This convolution could be much faster (for one thing, we only need a small fraction of the results).
+  console.log(img)
+  var steps = new Array(dims)
+  for(var d=0; d<dims; d++) {
+    steps[d] = 2
+  }
+  return img.step.apply(img, steps)
+}
+
+function binomialExpand(target, source, n) {
+  var dims = source.shape.length
+  var steps = [], los = []
+  for(var d=0; d<dims; d++) {
+    steps.push(2)
+    los.push(0)
+  }
+  var e = target.step.apply(target, steps), o
+  assert(equals(e.shape, source.shape))
+  ops.assign(e, source)
+  var kernel1 = binomials(n+1).map(function(v){return v*Math.pow(2,-n)}) // Note that this is scaled by a factor of two compared to the reduction kernel.
+  var kernelShape = new Array(dims)
+  for(var i=0; i<dims; i++) {
+    kernelShape[i] = kernel1.length
+  }
+  var kernel = pool.malloc(kernelShape, "float32")
+  constructBinomialKernel(kernel, kernel1)
+  convolve(target, kernel) // TODO: This convolution could be much faster (for one thing, only a small number of the input pixels is non-zero).
+  return target
+}
+
+////////////////////////////////////////
 // Helpers
+
+var constructBinomialKernel = cwise({
+  args: ["index", "array", "scalar"],
+  body: function(i, k, k1) {
+    k = i.reduce(function(p,c){return p*k1[c]}, 1)
+  }
+})
 
 var pairwiseMin = cwise({
   args: ["array", "array"],
@@ -243,3 +299,6 @@ function ndarrayFromDtype(shape, dtype) {
   }
   return ndarray(data, shape)
 }
+
+/* global Buffer */
+/* global Uint8ArrayClamped */
