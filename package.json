@@ -19,7 +19,7 @@
     "ndarray": "^1.0.16",
     "ndarray-ops": "^1.2.2",
     "ndarray-scratch": "^1.1.1",
-    "ndarray-convolve": "^1.0.1",
+    "ndarray-convolve": "^2.0.0",
     "multinomial": "^1.0.0"
   },
   "devDependencies": {

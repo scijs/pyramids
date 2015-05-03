@@ -165,7 +165,6 @@ function dilationExpand(target, source) {
 function binomialReduce(img, n) {
   var dims = img.shape.length
   var kernel1 = binomials(n+1).map(function(v){return v*Math.pow(2,-n-1)})
-  console.log(kernel1)
   var kernelShape = new Array(dims)
   for(var i=0; i<dims; i++) {
     kernelShape[i] = kernel1.length
@@ -174,7 +173,6 @@ function binomialReduce(img, n) {
   constructBinomialKernel(kernel, kernel1)
   // TODO: The kernel seems to be alright, but the convolution below returns the "wrong" part (it does not assume the kernel is centered)
   convolve(img, kernel) // TODO: This convolution could be much faster (for one thing, we only need a small fraction of the results).
-  console.log(img)
   var steps = new Array(dims)
   for(var d=0; d<dims; d++) {
     steps[d] = 2
@@ -189,8 +187,9 @@ function binomialExpand(target, source, n) {
     steps.push(2)
     los.push(0)
   }
-  var e = target.step.apply(target, steps), o
+  var e = target.step.apply(target, steps)
   assert(equals(e.shape, source.shape))
+  ops.assigns(target, 0)
   ops.assign(e, source)
   var kernel1 = binomials(n+1).map(function(v){return v*Math.pow(2,-n)}) // Note that this is scaled by a factor of two compared to the reduction kernel.
   var kernelShape = new Array(dims)

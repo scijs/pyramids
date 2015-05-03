@@ -46,22 +46,32 @@ pyramid.reconstruct(p, pyramid.adjunction)
 // p now contains a normal pyramid (with the first level corresponding to the full resolution reconstructed image)
 ```
 
-## Morphological pyramids.
+## Morphological pyramids
 
 Non-linear pyramids based on reduce and expand operators that satisfy the so-called pyramid condition: first expanding an image and then reducing it recovers the original image.
 
-### `pyramid.adjunction`
+### `require("pyramids").adjunction`
 
 The adjunction pyramid has a reduce operator based on erosion, as described in
 
-> Nonlinear multiresolution signal decomposition schemes &mdash; Part I: Morphological pyramids IEEE Transactions on Image Processing, Vol. 9, No. 11. (November 2000), pp. 1862-1876, doi:[10.1109/83.877209](http://dx.doi.org/10.1109/83.877209) by John Goutsias, Henk J. A. M. Heijmans.
+> Nonlinear multiresolution signal decomposition schemes &mdash; Part I: Morphological pyramids ''IEEE Transactions on Image Processing'', Vol. 9, No. 11. (November 2000), pp. 1862-1876, doi:[10.1109/83.877209](http://dx.doi.org/10.1109/83.877209) by John Goutsias, Henk J. A. M. Heijmans.
 
 The structuring element used here is a (flat) 2-by-2 square in 2D, and in general a hypercube with sides of length 2. The expand operator uses the dilation that forms an adjunction with the erosion.
 
-### `pyramid.SunMaragos`
+### `require("pyramids").SunMaragos`
 
 The SunMaragos pyramid has an opening (rather than an erosion) as reduce operator. The same structuring element is used as in the adjunction pyramid, based on the results in
 
-> A New Class of Morphological Pyramids for Multiresolution Image Analysis In Geometry, Morphology, and Computational Imaging, Vol. 2616 (2003), pp. 165-175, doi:[10.1007/3-540-36586-9_11](http://dx.doi.org/10.1007/3-540-36586-9_11) by Jos B. T. M. Roerdink edited by Tetsuo Asano, Reinhard Klette, Chrisitan Ronse.
+> A New Class of Morphological Pyramids for Multiresolution Image Analysis In Geometry, Morphology, and Computational Imaging, Vol. 2616 (2003), pp. 165-175, doi:[10.1007/3-540-36586-9_11](http://dx.doi.org/10.1007/3-540-36586-9_11) by Jos B. T. M. Roerdink edited by Tetsuo Asano, Reinhard Klette, Christian Ronse.
 
 This pyramid tends to preserve more of the image than the adjunction pyramid. However, the same expand operator is used as for the adjunction pyramid. Note that (according to Goutsias and Heijmans, 2000) Sun and Maragos originally used a different structuring element (of length 3).
+
+## Linear pyramids
+
+Non-linear pyramids based on reduce and expand operators that satisfy the so-called pyramid condition: first expanding an image and then reducing it recovers the original image.
+
+### `require("pyramids").binomial`
+
+This is a very basic pyramid that is not ideal for all purposes. However, it is essentially equivalent to the traditional Gaussian pyramid, and the Laplacian pyramid if a detail pyramid is computed. It uses a binomial filter (`[1,4,6,4,1]/16`) with the reduce and expand operators defined here:
+
+> The Laplacian Pyramid as a Compact Image Code ''IEEE Transactions on Communications'', Vol. 31, No. 4. (April 1983), pp. 532-540, doi:[10.1109/tcom.1983.1095851](http://dx.doi.org/10.1109/tcom.1983.1095851) by Peter J. Burt, Edward H. Adelson
